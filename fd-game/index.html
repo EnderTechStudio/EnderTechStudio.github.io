@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Danger</title>
+    <style>
+        canvas {
+            background-color: #ffffff;
+            display: block;
+            margin: auto;
+            border: 5px solid red; /* Red border around the canvas */
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .overlay.visible {
+            display: flex;
+        }
+        .overlay button {
+            padding: 10px 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="mainMenu" class="overlay visible">
+        <h1 style="color: white;">Falling Danger</h1>
+        <p style="color: white; font-size: 20px;">Controls: Use A/D or Arrow Keys to Move</p>
+        <button id="startButton">Start Game</button>
+    </div>
+    <div id="gameOverScreen" class="overlay">
+        <h1 style="color: red;">You Died</h1>
+        <p style="color: white;">Score: <span id="finalScore">0</span></p>
+        <p style="color: white;">High Score: <span id="highScore">0</span></p>
+        <button id="restartButton">Restart</button>
+    </div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>

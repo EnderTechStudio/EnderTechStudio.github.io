@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #00ff00;
+            font-family: monospace;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #terminal {
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            border: 1px solid #00ff00;
+            background-color: #000;
+            overflow-y: auto;
+            box-sizing: border-box;
+            font-size: 1.5rem; /* Increase font size */
+            display: none; /* Hide the terminal initially */
+        }
+        .input-line {
+            display: flex;
+        }
+        .prompt {
+            margin-right: 5px;
+        }
+        .command {
+            flex-grow: 1;
+            background: none;
+            border: none;
+            color: #00ff00;
+            outline: none;
+            font-size: 1.5rem; /* Match font size */
+        }
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ff00;
+            font-size: 2rem; /* Larger font size for splash */
+            font-family: monospace;
+        }
+        #dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #000;
+            color: #00ff00;
+            padding: 20px;
+            border: 1px solid #00ff00;
+            display: none;
+        }
+        #dialog button {
+            margin: 5px;
+            font-size: 1rem;
+        }
+        #webnet-container {
+            position: fixed;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            background-color: #000;
+            border: 2px solid #00ff00;
+            display: none;
+            flex-direction: column;
+        }
+        #webnet-header {
+            background-color: #000;
+            color: #00ff00;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #webnet-header span {
+            font-size: 1.5rem;
+        }
+        #webnet-header button {
+            background-color: #ff0000;
+            border: none;
+            color: #fff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        #webnet {
+            width: 100%;
+            height: calc(100% - 40px);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="splash">Logging into SSUSA...</div>
+    <div id="terminal"></div>
+    <div id="dialog">
+        <p>Do you want to set course?</p>
+        <button id="yesButton">Yes</button>
+        <button id="noButton">No</button>
+    </div>
+    <div id="webnet-container">
+        <div id="webnet-header">
+            <span>WebNet</span>
+            <button id="closeWebnetButton">X</button>
+        </div>
+        <iframe id="webnet" src="https://theschoolweb.000webhostapp.com"></iframe>
+    </div>
+    <script>
+        const terminal = document.getElementById('terminal');
+        const splash = document.getElementById('splash');
+        const dialog = document.getElementById('dialog');
+        const yesButton = document.getElementById('yesButton');
+        const noButton = document.getElementById('noButton');
+        const webnetContainer = document.getElementById('webnet-container');
+        const closeWebnetButton = document.getElementById('closeWebnetButton');
+        const username = 'USA-spacestation';
+        let currentCommand = '';
+
+        const planets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+
+        function createInputLine() {
+            const inputLine = document.createElement('div');
+            inputLine.className = 'input-line';
+            const prompt = document.createElement('span');
+            prompt.className = 'prompt';
+            prompt.textContent = `${username}:~$ `;
+            const command = document.createElement('input');
+            command.className = 'command';
+            command.type = 'text';
+            command.autocomplete = 'off';
+            command.autofocus = true;
+            command.addEventListener('keydown', handleCommand);
+            inputLine.appendChild(prompt);
+            inputLine.appendChild(command);
+            terminal.appendChild(inputLine);
+            command.focus();
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function handleCommand(event) {
+            if (event.key === 'Enter') {
+                const command = event.target.value.toLowerCase(); // Convert command to lowercase
+                currentCommand = command;
+                if (command === 'clear') {
+                    clearTerminal();
+                } else if (planets.includes(command)) {
+                    showDialog();
+                } else if (command === 'webnet') {
+                    loadWebnet();
+                } else {
+                    const output = document.createElement('div');
+                    output.textContent = `${username}:~$ ${event.target.value}`; // Display original command
+                    terminal.insertBefore(output, event.target.parentNode);
+                }
+                event.target.value = '';
+                createInputLine();
+                terminal.removeChild(event.target.parentNode); // Remove the previous input line
+            }
+        }
+
+        function clearTerminal() {
+            while (terminal.firstChild) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+
+        function showTerminal() {
+            splash.style.display = 'none';
+            terminal.style.display = 'block';
+            createInputLine();
+        }
+
+        function showDialog() {
+            dialog.style.display = 'block';
+        }
+
+        function loadWebnet() {
+            terminal.style.display = 'none';
+            webnetContainer.style.display = 'flex';
+        }
+
+        yesButton.addEventListener('click', () => {
+            dialog.style.display = 'none';
+            const output = document.createElement('div');
+            output.textContent = `${username}:~$ ${currentCommand}`;
+            terminal.appendChild(output);
+            const status = document.createElement('div');
+            status.textContent = 'Setting course...';
+            terminal.appendChild(status);
+            setTimeout(() => {
+                status.textContent = `Going to ${currentCommand.charAt(0).toUpperCase() + currentCommand.slice(1)} and orbiting it!`;
+                setTimeout(() => {
+                    const inputLine = document.createElement('div');
+                    inputLine.className = 'input-line';
+                    const prompt = document.createElement('span');
+                    prompt.className = 'prompt';
+                    prompt.textContent = `${username}:~$ `;
+                    const command = document.createElement('input');
+                    command.className = 'command';
+                    command.type = 'text';
+                    command.autocomplete = 'off';
+                    command.autofocus = true;
+                    command.addEventListener('keydown', handleCommand);
+                    inputLine.appendChild(prompt);
+                    inputLine.appendChild(command);
+                    terminal.appendChild(inputLine);
+                    command.focus();
+                    terminal.scrollTop = terminal.scrollHeight;
+                }, 5000); // Delay of 5 seconds before showing command line
+            }, 3000); // Delay of 3 seconds for setting course
+        });
+
+        noButton.addEventListener('click', () => {
+            dialog.style.display = 'none';
+        });
+
+        closeWebnetButton.addEventListener('click', () => {
+            webnetContainer.style.display = 'none';
+            terminal.style.display = 'block';
+            createInputLine();
+        });
+
+        // Show the terminal after a delay
+        setTimeout(showTerminal, 3000); // 3000ms = 3 seconds
+
+        // Add event listener for Shift+Z
+        document.addEventListener('keydown', (event) => {
+            if (event.shiftKey && event.key === 'Z') {
+                window.location.href = 'https://theschoolweb.000webhostapp.com';
+            }
+        });
+    </script>
+</body>
+</html>
