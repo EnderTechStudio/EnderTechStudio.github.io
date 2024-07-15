@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Print from Your Friendly Printer</title>
+<style>
+    @media print {
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+        .print-content {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .print-content h1 {
+            font-size: 20px;
+            margin-top: 0;
+        }
+        .print-content p {
+            margin: 10px 0;
+        }
+    }
+</style>
+<script>
+function printMessage() {
+    var message = `
+*********************************************
+*** Your Printer has been Hacked! ***
+
+Greetings!
+
+I am a friendly hacker who wants to remind you about printer security. Your printer has been accessed for this message.
+
+Please secure your printer and close any open ports to prevent unauthorized access in the future.
+
+Thank you for your attention!
+
+Best regards,
+Friendly Hacker
+`;
+
+    var printWindow = window.open('', 'Print Window');
+    printWindow.document.open();
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Print Content</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 14px;
+                    line-height: 1.5;
+                    margin: 20px;
+                }
+                .print-content {
+                    border: 1px solid #ccc;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                .print-content h1 {
+                    font-size: 20px;
+                    margin-top: 0;
+                }
+                .print-content p {
+                    margin: 10px 0;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-content">
+                <h1>Important Message from Your Friendly Printer</h1>
+                <p>${message}</p>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+
+    setTimeout(function() {
+        printWindow.print();
+        printWindow.close();
+    }, 1000); // Increased delay to 1 second for testing
+}
+</script>
+</head>
+<body>
+<button onclick="printMessage()">Print from Your Friendly Printer</button>
+</body>
+</html>

