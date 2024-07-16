@@ -72,14 +72,13 @@
         }
         #webnet-container {
             position: fixed;
-            top: 10%;
-            left: 10%;
-            width: 80%;
-            height: 80%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background-color: #000;
             border: 2px solid #00ff00;
             display: none;
-            flex-direction: column;
         }
         #webnet-header {
             background-color: #000;
@@ -120,7 +119,7 @@
             <span>WebNet</span>
             <button id="closeWebnetButton">X</button>
         </div>
-        <iframe id="webnet" src="https://theschoolweb.000webhostapp.com"></iframe>
+        <iframe id="webnet" src=""></iframe>
     </div>
     <script>
         const terminal = document.getElementById('terminal');
@@ -129,6 +128,7 @@
         const yesButton = document.getElementById('yesButton');
         const noButton = document.getElementById('noButton');
         const webnetContainer = document.getElementById('webnet-container');
+        const webnet = document.getElementById('webnet');
         const closeWebnetButton = document.getElementById('closeWebnetButton');
         const username = 'USA-spacestation';
         let currentCommand = '';
@@ -160,6 +160,10 @@
                 currentCommand = command;
                 if (command === 'clear') {
                     clearTerminal();
+                } else if (command === 'help') {
+                    showHelp();
+                } else if (command === 'planets') {
+                    showPlanets();
                 } else if (planets.includes(command)) {
                     showDialog();
                 } else if (command === 'webnet') {
@@ -191,9 +195,35 @@
             dialog.style.display = 'block';
         }
 
+        function showPlanets() {
+            const output = document.createElement('div');
+            output.textContent = 'Planets - Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto';
+            terminal.appendChild(output);
+            createInputLine();
+        }
+
         function loadWebnet() {
+            webnet.src = 'index.html';
             terminal.style.display = 'none';
             webnetContainer.style.display = 'flex';
+        }
+
+        function showHelp() {
+            const commands = [
+                'help - Show this help message',
+                'clear - Clear the terminal screen',
+                'planets - List names of planets',
+                'mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto - Set course to a planet',
+                'webnet - Load the WebNet interface (go one level up to index.html)',
+            ];
+
+            commands.forEach((cmd) => {
+                const output = document.createElement('div');
+                output.textContent = cmd;
+                terminal.appendChild(output);
+            });
+
+            createInputLine();
         }
 
         yesButton.addEventListener('click', () => {
@@ -239,13 +269,6 @@
 
         // Show the terminal after a delay
         setTimeout(showTerminal, 3000); // 3000ms = 3 seconds
-
-        // Add event listener for Shift+Z
-        document.addEventListener('keydown', (event) => {
-            if (event.shiftKey && event.key === 'Z') {
-                window.location.href = 'https://theschoolweb.000webhostapp.com';
-            }
-        });
     </script>
 </body>
 </html>

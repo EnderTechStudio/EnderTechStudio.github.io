@@ -20,37 +20,18 @@ let gameStarted = false;
 let countdown = 5;
 let paused = false;
 let gameLoopId = null;
-let shiftPressed = false;
-let zPressed = false;
 
 startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', startGame);
 document.addEventListener('keydown', handleKeyDown);
-document.addEventListener('keyup', handleKeyUp);
 
 function handleKeyDown(e) {
-    if (e.key === 'Shift') {
-        shiftPressed = true;
-    } else if (e.key.toLowerCase() === 'z') {
-        zPressed = true;
-    }
-
-    if (shiftPressed && zPressed) {
-        window.location.href = 'https://theschoolweb.000webhostapp.com';
-    } else if ((e.key === 'ArrowLeft' || e.key === 'a') && !paused) {
+    if ((e.key === 'ArrowLeft' || e.key === 'a') && !paused) {
         player.x -= player.speed;
     } else if ((e.key === 'ArrowRight' || e.key === 'd') && !paused) {
         player.x += player.speed;
     } else if (e.key === 'p' || e.key === 'P') {
         togglePause();
-    }
-}
-
-function handleKeyUp(e) {
-    if (e.key === 'Shift') {
-        shiftPressed = false;
-    } else if (e.key.toLowerCase() === 'z') {
-        zPressed = false;
     }
 }
 
