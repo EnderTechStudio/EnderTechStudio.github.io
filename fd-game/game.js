@@ -67,8 +67,13 @@ function detectCollision(enemy) {
 function spawnEnemies() {
     enemies = [];
     for (let i = 0; i < numEnemies; i++) {
-        const xPosition = Math.random() * (canvas.width - ENEMY_SIZE);
-        enemies.push({ x: xPosition, y: 0, size: ENEMY_SIZE, speed: ENEMY_SPEED });
+        let xPosition;
+        // Ensure enemy doesn't spawn directly above player and is near player's x position
+        do {
+            xPosition = player.x + Math.random() * PLAYER_SIZE * 2 - PLAYER_SIZE;
+        } while (xPosition < 0 || xPosition + ENEMY_SIZE > canvas.width);
+
+        enemies.push({ x: xPosition, y: -ENEMY_SIZE, size: ENEMY_SIZE, speed: ENEMY_SPEED });
     }
 }
 
@@ -101,12 +106,16 @@ function gameLoop() {
 
     if (!gameOver && !paused) {
         movePlayer();
-        
+
         enemies.forEach((enemy) => {
             enemy.y += enemy.speed;
             if (enemy.y > canvas.height) {
-                enemy.y = 0;
-                enemy.x = Math.random() * (canvas.width - enemy.size);
+                // Enemy resets to the top but stays near the player's x position
+                enemy.y = -ENEMY_SIZE;
+                do {
+                    enemy.x = player.x + Math.random() * PLAYER_SIZE * 2 - PLAYER_SIZE;
+                } while (enemy.x < 0 || enemy.x + enemy.size > canvas.width);
+
                 score++;
             }
 
