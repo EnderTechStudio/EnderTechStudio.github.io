@@ -12,7 +12,7 @@ const PLAYER_SPEED = 10;
 const PLAYER_START_Y = canvas.height - 150;
 
 let player = { x: canvas.width / 2 - PLAYER_SIZE / 2, y: PLAYER_START_Y, size: PLAYER_SIZE, speed: PLAYER_SPEED };
-let enemy = { x: 400, y: 0, size: ENEMY_SIZE, speed: ENEMY_SPEED };
+let enemies = [];
 let score = 0;
 let highScore = 0;
 let gameOver = false;
@@ -20,18 +20,19 @@ let gameStarted = false;
 let countdown = 5;
 let paused = false;
 let gameLoopId = null;
+const numEnemies = 3;  // Set the number of enemies
 
 startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', startGame);
 document.addEventListener('keydown', handleKeyDown);
 
 function handleKeyDown(e) {
-    if ((e.key === 'ArrowLeft' || e.key === 'a') && !paused) {
+    if (e.key === 'p' || e.key === 'P') {
+        togglePause();
+    } else if ((e.key === 'ArrowLeft' || e.key === 'a') && !paused) {
         player.x -= player.speed;
     } else if ((e.key === 'ArrowRight' || e.key === 'd') && !paused) {
         player.x += player.speed;
-    } else if (e.key === 'p' || e.key === 'P') {
-        togglePause();
     }
 }
 
@@ -54,7 +55,7 @@ function movePlayer() {
     }
 }
 
-function detectCollision() {
+function detectCollision(enemy) {
     return (
         player.x < enemy.x + enemy.size &&
         player.x + player.size > enemy.x &&
@@ -63,16 +64,24 @@ function detectCollision() {
     );
 }
 
+function spawnEnemies() {
+    enemies = [];
+    for (let i = 0; i < numEnemies; i++) {
+        const xPosition = Math.random() * (canvas.width - ENEMY_SIZE);
+        enemies.push({ x: xPosition, y: 0, size: ENEMY_SIZE, speed: ENEMY_SPEED });
+    }
+}
+
 function startGame() {
     mainMenu.classList.remove('visible');
-    gameOverScreen.classList.remove('visible');
     countdown = 5;
     gameOver = false;
     gameStarted = false;
     paused = false;
     player = { x: canvas.width / 2 - PLAYER_SIZE / 2, y: PLAYER_START_Y, size: PLAYER_SIZE, speed: PLAYER_SPEED };
-    enemy = { x: 400, y: 0, size: ENEMY_SIZE, speed: ENEMY_SPEED };
     score = 0;
+    spawnEnemies();
+
     const countdownInterval = setInterval(() => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.font = '48px Arial';
@@ -92,28 +101,32 @@ function gameLoop() {
 
     if (!gameOver && !paused) {
         movePlayer();
-        enemy.y += enemy.speed;
-        if (enemy.y > canvas.height) {
-            enemy.y = 0;
-            enemy.x = player.x + (Math.random() * ENEMY_SIZE - ENEMY_SIZE / 2);
-            score++;
-        }
-
-        if (detectCollision()) {
-            gameOver = true;
-            gameOverScreen.classList.add('visible');
-            document.getElementById('finalScore').textContent = score;
-            if (score > highScore) {
-                highScore = score;
-                updateHighScore();
-                saveHighScore();
+        
+        enemies.forEach((enemy) => {
+            enemy.y += enemy.speed;
+            if (enemy.y > canvas.height) {
+                enemy.y = 0;
+                enemy.x = Math.random() * (canvas.width - enemy.size);
+                score++;
             }
-        }
+
+            if (detectCollision(enemy)) {
+                gameOver = true;
+                gameOverScreen.classList.add('visible');
+                document.getElementById('finalScore').textContent = score;
+                if (score > highScore) {
+                    highScore = score;
+                    updateHighScore();
+                    saveHighScore();
+                }
+            }
+
+            ctx.fillStyle = 'red';
+            ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+        });
 
         ctx.fillStyle = 'black';
         ctx.fillRect(player.x, player.y, player.size, player.size);
-        ctx.fillStyle = 'red';
-        ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
 
         ctx.font = '24px Arial';
         ctx.fillStyle = 'black';
@@ -152,5 +165,3 @@ function getHighScoreFromCookie() {
 
 highScore = getHighScoreFromCookie();
 updateHighScore();
-
-requestAnimationFrame(gameLoop);
