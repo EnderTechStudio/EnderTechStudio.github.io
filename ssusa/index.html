@@ -3,272 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal</title>
+    <title>Space Shooter</title>
     <style>
         body {
-            background-color: #000;
-            color: #00ff00;
-            font-family: monospace;
             margin: 0;
             overflow: hidden;
+            background: #000;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
         }
-        #terminal {
-            width: 100%;
-            height: 100%;
-            padding: 10px;
-            border: 1px solid #00ff00;
-            background-color: #000;
-            overflow-y: auto;
-            box-sizing: border-box;
-            font-size: 1.5rem; /* Increase font size */
-            display: none; /* Hide the terminal initially */
+        canvas {
+            background: #000;
+            border: 1px solid #fff;
         }
-        .input-line {
-            display: flex;
-        }
-        .prompt {
-            margin-right: 5px;
-        }
-        .command {
-            flex-grow: 1;
-            background: none;
-            border: none;
-            color: #00ff00;
-            outline: none;
-            font-size: 1.5rem; /* Match font size */
-        }
-        #splash {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #00ff00;
-            font-size: 2rem; /* Larger font size for splash */
-            font-family: monospace;
-        }
-        #dialog {
-            position: fixed;
+        .button-container {
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #000;
-            color: #00ff00;
-            padding: 20px;
-            border: 1px solid #00ff00;
-            display: none;
-        }
-        #dialog button {
-            margin: 5px;
-            font-size: 1rem;
-        }
-        #webnet-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            border: 2px solid #00ff00;
-            display: none;
-        }
-        #webnet-header {
-            background-color: #000;
-            color: #00ff00;
-            padding: 10px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
         }
-        #webnet-header span {
-            font-size: 1.5rem;
-        }
-        #webnet-header button {
-            background-color: #ff0000;
+        .button {
+            background: #00ff00;
+            color: #000;
+            padding: 10px 20px;
             border: none;
-            color: #fff;
-            padding: 5px 10px;
+            margin: 5px;
             cursor: pointer;
-            font-size: 1rem;
         }
-        #webnet {
-            width: 100%;
-            height: calc(100% - 40px);
-            border: none;
+        .score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #00ff00;
+            font-size: 24px;
         }
     </style>
 </head>
 <body>
-    <div id="splash">Logging into SSUSA...</div>
-    <div id="terminal"></div>
-    <div id="dialog">
-        <p>Do you want to set course?</p>
-        <button id="yesButton">Yes</button>
-        <button id="noButton">No</button>
+    <div class="button-container" id="buttonContainer">
+        <button class="button" id="startButton">Start Game</button>
     </div>
-    <div id="webnet-container">
-        <div id="webnet-header">
-            <span>WebNet</span>
-            <button id="closeWebnetButton">X</button>
-        </div>
-        <iframe id="webnet" src=""></iframe>
-    </div>
+    <canvas id="gameCanvas" width="480" height="320"></canvas>
+    <div class="score" id="score">Score: 0</div>
     <script>
-        const terminal = document.getElementById('terminal');
-        const splash = document.getElementById('splash');
-        const dialog = document.getElementById('dialog');
-        const yesButton = document.getElementById('yesButton');
-        const noButton = document.getElementById('noButton');
-        const webnetContainer = document.getElementById('webnet-container');
-        const webnet = document.getElementById('webnet');
-        const closeWebnetButton = document.getElementById('closeWebnetButton');
-        const username = 'USA-spacestation';
-        let currentCommand = '';
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        const planets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+        const player = {
+            x: canvas.width / 2 - 15,
+            y: canvas.height - 60,
+            width: 30,
+            height: 30,
+            speed: 3,
+            dx: 0
+        };
 
-        function createInputLine() {
-            const inputLine = document.createElement('div');
-            inputLine.className = 'input-line';
-            const prompt = document.createElement('span');
-            prompt.className = 'prompt';
-            prompt.textContent = `${username}:~$ `;
-            const command = document.createElement('input');
-            command.className = 'command';
-            command.type = 'text';
-            command.autocomplete = 'off';
-            command.autofocus = true;
-            command.addEventListener('keydown', handleCommand);
-            inputLine.appendChild(prompt);
-            inputLine.appendChild(command);
-            terminal.appendChild(inputLine);
-            command.focus();
-            terminal.scrollTop = terminal.scrollHeight;
+        const bullets = [];
+        const enemies = [];
+        const enemySize = 15; 
+        const enemySpawnInterval = 2500; 
+        const maxEnemies = 5; 
+        let gameOver = false;
+        let score = 0;
+        let lastShotTime = 0;
+        const shootInterval = 500;
+
+        let aimbotEnabled = false;
+
+        function drawPlayer() {
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
         }
 
-        function handleCommand(event) {
-            if (event.key === 'Enter') {
-                const command = event.target.value.toLowerCase(); // Convert command to lowercase
-                currentCommand = command;
-                if (command === 'clear') {
-                    clearTerminal();
-                } else if (command === 'help') {
-                    showHelp();
-                } else if (command === 'planets') {
-                    showPlanets();
-                } else if (planets.includes(command)) {
-                    showDialog();
-                } else if (command === 'webnet') {
-                    loadWebnet();
-                } else {
-                    const output = document.createElement('div');
-                    output.textContent = `${username}:~$ ${event.target.value}`; // Display original command
-                    terminal.insertBefore(output, event.target.parentNode);
-                }
-                event.target.value = '';
-                createInputLine();
-                terminal.removeChild(event.target.parentNode); // Remove the previous input line
+        function updatePlayer() {
+            player.x += player.dx;
+
+            if (player.x < 0) {
+                player.x = 0;
+            }
+
+            if (player.x + player.width > canvas.width) {
+                player.x = canvas.width - player.width;
             }
         }
 
-        function clearTerminal() {
-            while (terminal.firstChild) {
-                terminal.removeChild(terminal.firstChild);
+        function shootBullet() {
+            const currentTime = Date.now();
+            if (aimbotEnabled || currentTime - lastShotTime > shootInterval) {
+                bullets.push({ x: player.x + player.width / 2 - 2.5, y: player.y, width: 5, height: 10 });
+                lastShotTime = currentTime;
             }
         }
 
-        function showTerminal() {
-            splash.style.display = 'none';
-            terminal.style.display = 'block';
-            createInputLine();
-        }
-
-        function showDialog() {
-            dialog.style.display = 'block';
-        }
-
-        function showPlanets() {
-            const output = document.createElement('div');
-            output.textContent = 'Planets - Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto';
-            terminal.appendChild(output);
-            createInputLine();
-        }
-
-        function loadWebnet() {
-            webnet.src = 'index.html';
-            terminal.style.display = 'none';
-            webnetContainer.style.display = 'flex';
-        }
-
-        function showHelp() {
-            const commands = [
-                'help - Show this help message',
-                'clear - Clear the terminal screen',
-                'planets - List names of planets',
-                'mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto - Set course to a planet',
-                'webnet - Load the WebNet interface (go one level up to index.html)',
-            ];
-
-            commands.forEach((cmd) => {
-                const output = document.createElement('div');
-                output.textContent = cmd;
-                terminal.appendChild(output);
+        function drawBullets() {
+            ctx.fillStyle = '#ffffff';
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             });
-
-            createInputLine();
         }
 
-        yesButton.addEventListener('click', () => {
-            dialog.style.display = 'none';
-            const output = document.createElement('div');
-            output.textContent = `${username}:~$ ${currentCommand}`;
-            terminal.appendChild(output);
-            const status = document.createElement('div');
-            status.textContent = 'Setting course...';
-            terminal.appendChild(status);
-            setTimeout(() => {
-                status.textContent = `Going to ${currentCommand.charAt(0).toUpperCase() + currentCommand.slice(1)} and orbiting it!`;
-                setTimeout(() => {
-                    const inputLine = document.createElement('div');
-                    inputLine.className = 'input-line';
-                    const prompt = document.createElement('span');
-                    prompt.className = 'prompt';
-                    prompt.textContent = `${username}:~$ `;
-                    const command = document.createElement('input');
-                    command.className = 'command';
-                    command.type = 'text';
-                    command.autocomplete = 'off';
-                    command.autofocus = true;
-                    command.addEventListener('keydown', handleCommand);
-                    inputLine.appendChild(prompt);
-                    inputLine.appendChild(command);
-                    terminal.appendChild(inputLine);
-                    command.focus();
-                    terminal.scrollTop = terminal.scrollHeight;
-                }, 5000); // Delay of 5 seconds before showing command line
-            }, 3000); // Delay of 3 seconds for setting course
+        function updateBullets() {
+            bullets.forEach(bullet => {
+                bullet.y -= 5;
+
+                if (bullet.y < 0) {
+                    bullets.splice(bullets.indexOf(bullet), 1);
+                }
+            });
+        }
+
+        function spawnEnemy() {
+            if (enemies.length < maxEnemies) {
+                const playerX = player.x + player.width / 2 - enemySize / 2; 
+                enemies.push({ x: playerX, y: 0, width: enemySize, height: enemySize });
+                
+                for (let i = 0; i < 2; i++) { 
+                    const randomX = Math.random() * (canvas.width - enemySize); 
+                    enemies.push({ x: randomX, y: 0, width: enemySize, height: enemySize });
+                }
+            }
+        }
+
+        function drawEnemies() {
+            ctx.fillStyle = '#ff0000';
+            enemies.forEach(enemy => {
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            });
+        }
+
+        function updateEnemies() {
+            enemies.forEach(enemy => {
+                enemy.y += 2; 
+
+                if (enemy.y > canvas.height) {
+                    enemies.splice(enemies.indexOf(enemy), 1);
+                }
+
+                if (
+                    player.x < enemy.x + enemy.width &&
+                    player.x + player.width > enemy.x &&
+                    player.y < enemy.y + enemy.height &&
+                    player.y + player.height > enemy.y
+                ) {
+                    gameOver = true;
+                }
+            });
+        }
+
+        function checkCollisions() {
+            bullets.forEach(bullet => {
+                enemies.forEach(enemy => {
+                    if (
+                        bullet.x < enemy.x + enemy.width &&
+                        bullet.x + bullet.width > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + bullet.height > enemy.y
+                    ) {
+                        bullets.splice(bullets.indexOf(bullet), 1);
+                        enemies.splice(enemies.indexOf(enemy), 1);
+                        score++;
+                        document.getElementById('score').innerText = `Score: ${score}`;
+                    }
+                });
+            });
+        }
+
+        function clear() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function update() {
+            if (!gameOver) {
+                clear();
+                drawPlayer();
+                drawBullets();
+                drawEnemies();
+                updatePlayer();
+                updateBullets();
+                updateEnemies();
+                checkCollisions();
+
+                requestAnimationFrame(update);
+            } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '20px Arial';
+                ctx.fillText('Game Over', canvas.width / 2 - 50, canvas.height / 2);
+                ctx.fillText(`Score: ${score}`, canvas.width / 2 - 35, canvas.height / 2 + 30);
+                showRestartButton();
+            }
+        }
+
+        function keyDown(e) {
+            if (e.key === 'Right' || e.key === 'ArrowRight') {
+                player.dx = player.speed;
+            } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
+                player.dx = -player.speed;
+            } else if (e.key === ' ' || e.key === 'Spacebar') {
+                shootBullet();
+            }
+        }
+
+        function keyUp(e) {
+            if (
+                e.key === 'Right' ||
+                e.key === 'ArrowRight' ||
+                e.key === 'Left' ||
+                e.key === 'ArrowLeft'
+            ) {
+                player.dx = 0;
+            }
+        }
+
+        function startGame() {
+            document.getElementById('buttonContainer').style.display = 'none';
+            gameOver = false;
+            score = 0;
+            bullets.length = 0;
+            enemies.length = 0;
+            update();
+            setInterval(spawnEnemy, enemySpawnInterval);
+        }
+
+        function showRestartButton() {
+            const buttonContainer = document.getElementById('buttonContainer');
+            buttonContainer.innerHTML = '<button class="button" id="restartButton">Restart Game</button>';
+            buttonContainer.style.display = 'flex';
+            document.getElementById('restartButton').addEventListener('click', startGame);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Control' && e.key === 'i') {
+                aimbotEnabled = !aimbotEnabled;
+            }
         });
 
-        noButton.addEventListener('click', () => {
-            dialog.style.display = 'none';
-        });
+        document.addEventListener('keydown', keyDown);
+        document.addEventListener('keyup', keyUp);
 
-        closeWebnetButton.addEventListener('click', () => {
-            webnetContainer.style.display = 'none';
-            terminal.style.display = 'block';
-            createInputLine();
-        });
-
-        // Show the terminal after a delay
-        setTimeout(showTerminal, 3000); // 3000ms = 3 seconds
+        document.getElementById('startButton').addEventListener('click', startGame);
     </script>
 </body>
 </html>
