@@ -134,7 +134,7 @@ function restartGame() {
 function showCredits() {
     ctx.fillStyle = "black";
     ctx.font = "20px Arial";
-    ctx.fillText("Made by Nolan Hartigan and ChatGPT-4", canvas.width / 2 - 150, canvas.height / 2);
+    ctx.fillText("Made by Nolan Hartigan", canvas.width / 2 - 150, canvas.height / 2);
     setTimeout(update, 3000);  // Wait 3 seconds, then start the game
 }
 
