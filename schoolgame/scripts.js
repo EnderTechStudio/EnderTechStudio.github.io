@@ -107,7 +107,7 @@ function drawScoreAndLives() {
     ctx.fillText("Score: " + score, 10, 20);
 
     ctx.fillStyle = "red";
-    ctx.fillText("Lives: " + "❤".repeat(lives), canvas.width - 125, 20);
+    ctx.fillText("Lives: " + "❤".repeat(lives), canvas.width - 360, 20);
 }
 
 // End the game
