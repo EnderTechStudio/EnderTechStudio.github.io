@@ -7,7 +7,7 @@ let player = {
     y: canvas.height - 30,
     width: 50,
     height: 10,
-    speed: 3,  // Slower player speed
+    speed: 4,  // Slower player speed
     dx: 0
 };
 
