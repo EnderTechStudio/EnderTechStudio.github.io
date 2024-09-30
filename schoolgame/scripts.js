@@ -16,7 +16,7 @@ let fallingObject = {
     y: 0,
     width: 20,
     height: 20,
-    speed: 2
+    speed: 4
 };
 
 let score = 0;
