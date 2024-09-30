@@ -125,7 +125,7 @@ function endGame() {
 function restartGame() {
     score = 0;
     lives = 3;
-    fallingObject.speed = 2;
+    fallingObject.speed = 4;
     isGameOver = false;
     update();  // Restart the game loop
 }
