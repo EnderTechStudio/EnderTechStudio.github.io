@@ -7,7 +7,7 @@ let player = {
     y: canvas.height - 30,
     width: 50,
     height: 10,
-    speed: 4,  // Slower player speed
+    speed: 3,  // Slower player speed
     dx: 0
 };
 
@@ -16,7 +16,7 @@ let fallingObject = {
     y: 0,
     width: 20,
     height: 20,
-    speed: 4
+    speed: 3
 };
 
 let score = 0;
@@ -125,7 +125,7 @@ function endGame() {
 function restartGame() {
     score = 0;
     lives = 3;
-    fallingObject.speed = 4;
+    fallingObject.speed = 3;
     isGameOver = false;
     update();  // Restart the game loop
 }
